@@ -1,7 +1,7 @@
 CFLAGS	= -Wall -pthread -lrt
 
-vers: vers.o
-	gcc $(CFLAGS) -o vers -lpigpio vers.o
+vers.exe: vers.o
+	gcc $(CFLAGS) -o vers.exe -lpigpio vers.o
 
 vers.o: vers.c
 	gcc $(CFLAGS) -c vers.c
