@@ -7,7 +7,7 @@ vers.o: vers.c
 	gcc $(CFLAGS) -c vers.c
 
 clean:
-	rm vers vers.o
+	rm vers.exe vers.o
 
-run: vers
-	sudo ./vers
+run: vers.exe
+	sudo ./vers.exe

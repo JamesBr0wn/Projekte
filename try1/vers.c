@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include <pigpio.h>
 
@@ -18,4 +20,22 @@ int main(int argc, char *argv[])
 	unsigned int ui = 0xc03130;
 	printf("tst %u unsigned\n", ui);
 	*/
+	
+	int status = gpioInitialise();
+	printf("initialise says: %d\n", status);
+	if (status < 0)
+	{
+		exit(1);
+	}
+	sleep(1);
+
+	// --------------------------
+	int ledPin1 = 4;
+	int ledPin2 = 17;
+	int initLed1 = gpioSetMode(ledPin1, PI_OUTPUT);
+	printf("set output1 to GPIO %d: status: %d\n", ledPin1, initLed1);
+	int initLed2 = gpioSetMode(ledPin2, PI_OUTPUT);
+	printf("set output2 to GPIO %d: status: %d\n", ledPin2, initLed2);
+	// --------------------------
+	gpioTerminate();
 }
