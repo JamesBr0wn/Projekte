@@ -1,10 +1,10 @@
 CFLAGS	= -Wall -pthread -lrt
 
 vers.exe: vers.o
-	gcc $(CFLAGS) -o vers.exe -lpigpio vers.o
+	gcc -Wall -pthread -o vers.exe vers.o -lpigpio -lrt
 
 vers.o: vers.c
-	gcc $(CFLAGS) -c vers.c
+	gcc -Wall -c vers.c
 
 clean:
 	rm vers.exe vers.o

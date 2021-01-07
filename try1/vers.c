@@ -27,15 +27,19 @@ int main(int argc, char *argv[])
 	{
 		exit(1);
 	}
-	sleep(1);
 
 	// --------------------------
 	int ledPin1 = 4;
-	int ledPin2 = 17;
+	// int ledPin2 = 17;
 	int initLed1 = gpioSetMode(ledPin1, PI_OUTPUT);
-	printf("set output1 to GPIO %d: status: %d\n", ledPin1, initLed1);
-	int initLed2 = gpioSetMode(ledPin2, PI_OUTPUT);
-	printf("set output2 to GPIO %d: status: %d\n", ledPin2, initLed2);
+	printf("set output1 to GPIO %d: status: %d (0 means ok)\n", ledPin1, initLed1);
+	//int initLed2 = gpioSetMode(ledPin2, PI_OUTPUT);
+	//printf("set output2 to GPIO %d: status: %d (0 means ok)\n", ledPin2, initLed2);
+  int writeLed1 = gpioWrite(ledPin1, 1);
+  printf("write 1 GPIO %d: status: %d (0 means ok)\n", ledPin1, writeLed1);
+  
+	sleep(1);
 	// --------------------------
+	gpioWrite(ledPin1, 0); // don't keep it on
 	gpioTerminate();
 }

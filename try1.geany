@@ -29,7 +29,8 @@ long_line_column=72
 
 [files]
 current_page=0
-FILE_NAME_0=960;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FProjekte%2Ftry1%2Fvers.c;0;2
+FILE_NAME_0=1053;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FProjekte%2Ftry1%2Fvers.c;0;2
+FILE_NAME_1=197;Make;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FProjekte%2Ftry1%2Fmakefile;0;2
 
 [VTE]
 last_dir=/home/pi
