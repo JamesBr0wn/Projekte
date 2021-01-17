@@ -23,9 +23,9 @@ int main(int argc, char *argv[])
 	/* my PI returns 0xc03130 as revision from cat /proc/cpuinfo
 	unsigned int ui = 0xc03130;
 	*/
-  unsigned int gpioVer = gpioVersion();
+	unsigned int gpioVer = gpioVersion();
 	printf("gpioVersion = %u\n", gpioVer);
-	
+
 	int libStatus = gpioInitialise();
 	printf("initialise says: %d\n", libStatus);
 	if (libStatus < 0)
@@ -42,12 +42,12 @@ int main(int argc, char *argv[])
 	if (initLed1 < 0) doExit();
 
 	// -------------------------- work
-  int writeLed1 = gpioWrite(led1Pin, 1);
-  printf("write 1 GPIO %d: status: %d (0 means ok)\n", led1Pin, writeLed1);
-  
-  int button1Status;
-  for (int i= 0; i< 100; i++)
-  {
+	int writeLed1 = gpioWrite(led1Pin, 1);
+	printf("write 1 GPIO %d: status: %d (0 means ok)\n", led1Pin, writeLed1);
+
+	int button1Status;
+	for (int i= 0; i< 100; i++)
+	{
 		button1Status = gpioRead(button1Pin);
 		printf("step %d get input1 status: %d (>=0 means ok)\n", i, button1Status);
 		usleep(200000); // in microseconds
