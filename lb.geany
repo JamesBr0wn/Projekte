@@ -29,7 +29,9 @@ long_line_column=72
 
 [files]
 current_page=0
-FILE_NAME_0=0;Make;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FProjekte%2Flb%2Fmakefile;0;2
+FILE_NAME_0=1542;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FProjekte%2Flb%2Flb.c;0;2
+FILE_NAME_1=0;Make;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FProjekte%2Flb%2Fmakefile;0;2
+FILE_NAME_2=147378;C++;0;EUTF-8;0;1;0;%2Fusr%2Flocal%2Finclude%2Fpigpio.h;0;3
 
 [VTE]
 last_dir=/home/pi
