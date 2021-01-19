@@ -10,7 +10,13 @@ unsigned int button1Pin = 22;
 void doExit()
 {
 	gpioWrite(led1Pin, 0); // don't keep it on... if it was on
+	gpioSetAlertFunc(button1Pin, NULL); // remove the listener... if it was set
 	gpioTerminate();
+}
+
+void button1AlertFunc(int gpio, int level, uint32_t tick)
+{
+	printf("Alert: gpio %d, level %d, tick %u\n", gpio, level, tick);
 }
 
 int main(int argc, char *argv[])
@@ -45,6 +51,7 @@ int main(int argc, char *argv[])
 	int writeLed1 = gpioWrite(led1Pin, 1);
 	printf("write 1 GPIO %d: status: %d (0 means ok)\n", led1Pin, writeLed1);
 
+  /* // polling
 	int button1Status;
 	for (int i= 0; i< 100; i++)
 	{
@@ -52,6 +59,12 @@ int main(int argc, char *argv[])
 		printf("step %d get input1 status: %d (>=0 means ok)\n", i, button1Status);
 		usleep(200000); // in microseconds
 	}
+  */
+
+  // eventing
+  int button1AlertSet = gpioSetAlertFunc(button1Pin, &button1AlertFunc);
+  printf("input1 set alert: %d (>=0 means ok)\n", button1AlertSet);
+  sleep(20);
 
 	// -------------------------- cleanup
 	doExit();
