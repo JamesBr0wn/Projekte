@@ -93,7 +93,7 @@ int doSetEndActivity()
   currentMachineState.state = STATUS_BASE;
   usleep(1000000);
   // serv should be base position, so switch it off
-  int servo1Status = gpioServo(servo1Pin, 0);
+  servo1Status = gpioServo(servo1Pin, 0);
   if (0 > servo1Status)
   {
     printf("Fail setting Servo1\n");
