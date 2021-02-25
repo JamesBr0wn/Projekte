@@ -11,13 +11,14 @@ struct machineState
   enum machineStatus state;
 } currentMachineState;
 
-const unsigned int led1Pin = 17;
-const unsigned int button1Pin = 22;
-const unsigned int servo1Pin = 23;
+const unsigned int ledWorkPin = 17;
+const unsigned int ledReadyPin = 5;
+const unsigned int buttonStartWorkPin = 22;
+const unsigned int servoHoodPin = 23;
 const int deltastep = 25;
-const int servo1limitlow = 750;
-const int servo1limithigh = 2350;
-const unsigned int baseServo1Pos = 1500;
+const int servoHoodlimitlow = 750;
+const int servoHoodlimithigh = 2350;
+const unsigned int baseServoHoodPos = 1500;
 
 int doInitLib()
 {
@@ -42,26 +43,38 @@ int doInitLib()
 int doInit()
 {
   // -------------------------- init Pins
-  int initLed1 = gpioSetMode(led1Pin, PI_OUTPUT);
+  int initLed1 = gpioSetMode(ledWorkPin, PI_OUTPUT);
   if (initLed1 < 0)
   {
-    printf("set output1 to GPIO %d: status: %d (0 means ok)\n", led1Pin, initLed1);
+    printf("set output1 to GPIO %d: status: %d (0 means ok)\n", ledWorkPin, initLed1);
     return -1;
   }
-  int initButton1 = gpioSetMode(button1Pin, PI_INPUT);
+  int initLed2 = gpioSetMode(ledReadyPin, PI_OUTPUT);
+  if (initLed2 < 0)
+  {
+    printf("set output2 to GPIO %d: status: %d (0 means ok)\n", ledReadyPin, initLed2);
+    return -1;
+  }
+  int writeLed2 = gpioWrite(ledReadyPin, 1);
+  if (0 > writeLed2)
+  {
+    printf("Fail setting LED\n");
+  }
+  int initButton1 = gpioSetMode(buttonStartWorkPin, PI_INPUT);
   if (initLed1 < 0)
   {
     return -1;
-    printf("set input1 to GPIO %d: status: %d (0 means ok)\n", button1Pin, initButton1);
+    printf("set input1 to GPIO %d: status: %d (0 means ok)\n", buttonStartWorkPin, initButton1);
   }
   return 0;
 }
 
 void doExit()
 {
-  gpioWrite(led1Pin, 0); // don't keep it on... if it was on
-  gpioSetAlertFunc(button1Pin, NULL); // remove the listener... if it was set
-  gpioServo(servo1Pin, 0); // means stop PWM
+  gpioWrite(ledWorkPin, 0); // don't keep it on... if it was on
+  gpioWrite(ledReadyPin, 0);
+  gpioSetAlertFunc(buttonStartWorkPin, NULL); // remove the listener... if it was set
+  gpioServo(servoHoodPin, 0); // means stop PWM
   gpioTerminate();
 }
 
@@ -78,13 +91,13 @@ void button1AlertFunc(int gpio, int level, uint32_t tick)
 int doSetEndActivity()
 {
   int ret = 0;
-  int writeLed1 = gpioWrite(led1Pin, 0);
+  int writeLed1 = gpioWrite(ledWorkPin, 0);
   if (0 > writeLed1)
   {
     printf("Fail setting LED\n");
     ret--;
   }
-  int servo1Status = gpioServo(servo1Pin, baseServo1Pos);
+  int servo1Status = gpioServo(servoHoodPin, baseServoHoodPos);
   if (0 > servo1Status)
   {
     printf("Fail setting Servo1\n");
@@ -92,8 +105,8 @@ int doSetEndActivity()
   }
   currentMachineState.state = STATUS_BASE;
   usleep(1000000);
-  // serv should be base position, so switch it off
-  servo1Status = gpioServo(servo1Pin, 0);
+  // serv should be in base position, so switch it off
+  servo1Status = gpioServo(servoHoodPin, 0);
   if (0 > servo1Status)
   {
     printf("Fail setting Servo1\n");
@@ -119,7 +132,7 @@ int main(int argc, char *argv[])
 
   // -------------------------- work
   // eventing
-  int button1AlertSet = gpioSetAlertFunc(button1Pin, &button1AlertFunc);
+  int button1AlertSet = gpioSetAlertFunc(buttonStartWorkPin, &button1AlertFunc);
   if (0 > button1AlertSet)
   {
     printf("input1 set alert: %d (>=0 means ok)\n", button1AlertSet);
@@ -135,28 +148,28 @@ int main(int argc, char *argv[])
     usleep(500000);
     if (STATUS_RUNNING == currentMachineState.state)
     {
-      int writeLed1 = gpioWrite(led1Pin, 1);
+      int writeLed1 = gpioWrite(ledWorkPin, 1);
       if (0 > writeLed1)
       {
         printf("Fail setting LED\n");
       }
       // do activity
       int delta = deltastep;
-      int pos = baseServo1Pos;
+      int pos = baseServoHoodPos;
       for (int i=0; i<100; i++)
       {
         pos += delta;
-        int servo1Status = gpioServo(servo1Pin, pos);
+        int servo1Status = gpioServo(servoHoodPin, pos);
         if (0 > servo1Status)
         {
           printf("Fail setting Servo1\n");
         }
         usleep(30000);
-        if (pos >= servo1limithigh)
+        if (pos >= servoHoodlimithigh)
         {
           delta = -1 * deltastep;
         }
-        if (pos <= servo1limitlow)
+        if (pos <= servoHoodlimitlow)
         {
           delta = deltastep;
         }
