@@ -9,6 +9,7 @@ enum machineStatus {STATUS_BASE, STATUS_RUNNING };
 struct machineState
 {
   enum machineStatus state;
+  uint32_t lastTick;
 } currentMachineState;
 
 const unsigned int ledWorkPin = 17;
@@ -66,6 +67,9 @@ int doInit()
     return -1;
     printf("set input1 to GPIO %d: status: %d (0 means ok)\n", buttonStartWorkPin, initButton1);
   }
+  // initialize machine state
+  currentMachineState.state = STATUS_BASE;
+  currentMachineState.lastTick = 0;
   return 0;
 }
 
@@ -81,10 +85,23 @@ void doExit()
 void button1AlertFunc(int gpio, int level, uint32_t tick)
 {
   // printf("Alert: gpio %d, level %d, tick %u\n", gpio, level, tick);
+  if (tick - currentMachineState.lastTick > 400) // non-ideal switch sending multiple events
+	{
+		printf("\nAccepted: gpio %d, level %d, tick %u\n", gpio, level, tick);
+	}
+	else
+	{
+		// printf("Ignored: gpio %d, level %d, tick %u\n", gpio, level, tick);
+    return;
+	}
+  currentMachineState.lastTick = tick;
+
+  // 
   if ( (STATUS_BASE == currentMachineState.state) && (0 == level) )
   {
     currentMachineState.state = STATUS_RUNNING;
     printf("Setting machine state to RUNNING\n");
+    return;
   }
 }
 

@@ -9,16 +9,20 @@ enum machineStatus {STATUS_BASE, STATUS_RUNNING };
 struct machineState
 {
   enum machineStatus state;
+  uint32_t lastTick;
 } currentMachineState;
 
 const unsigned int ledWorkPin = 17;
 const unsigned int ledReadyPin = 5;
 const unsigned int buttonStartWorkPin = 22;
-const unsigned int servoHoodPin = 23;
-const int deltastep = 25;
+const unsigned int servoHoodPin = 25;
+const unsigned int servoArmPin = 23 ;
 const int servoHoodlimitlow = 750;
 const int servoHoodlimithigh = 2350;
-const unsigned int baseServoHoodPos = 1500;
+const int servoArmlimitlow = 750;
+const int servoArmlimithigh = 2350;
+const unsigned int baseServoHoodPos = 1000;
+const unsigned int baseServoArmPos = 1000;
 
 int doInitLib()
 {
@@ -66,6 +70,9 @@ int doInit()
     return -1;
     printf("set input1 to GPIO %d: status: %d (0 means ok)\n", buttonStartWorkPin, initButton1);
   }
+  // initialize machine state
+  currentMachineState.state = STATUS_BASE;
+  currentMachineState.lastTick = 0;
   return 0;
 }
 
@@ -75,16 +82,30 @@ void doExit()
   gpioWrite(ledReadyPin, 0);
   gpioSetAlertFunc(buttonStartWorkPin, NULL); // remove the listener... if it was set
   gpioServo(servoHoodPin, 0); // means stop PWM
+  gpioServo(servoArmPin, 0); // means stop PWM
   gpioTerminate();
 }
 
 void button1AlertFunc(int gpio, int level, uint32_t tick)
 {
   // printf("Alert: gpio %d, level %d, tick %u\n", gpio, level, tick);
+  if (tick - currentMachineState.lastTick > 400) // non-ideal switch sending multiple events
+	{
+		// printf("\nAccepted: gpio %d, level %d, tick %u\n", gpio, level, tick);
+	}
+	else
+	{
+		// printf("Ignored: gpio %d, level %d, tick %u\n", gpio, level, tick);
+    return;
+	}
+  currentMachineState.lastTick = tick;
+
+  // 
   if ( (STATUS_BASE == currentMachineState.state) && (0 == level) )
   {
     currentMachineState.state = STATUS_RUNNING;
     printf("Setting machine state to RUNNING\n");
+    return;
   }
 }
 
@@ -103,6 +124,12 @@ int doSetEndActivity()
     printf("Fail setting Servo1\n");
     ret--;
   }
+  int servo2Status = gpioServo(servoArmPin, baseServoArmPos);
+  if (0 > servo2Status)
+  {
+    printf("Fail setting Servo2\n");
+    ret--;
+  }
   currentMachineState.state = STATUS_BASE;
   usleep(1000000);
   // serv should be in base position, so switch it off
@@ -110,6 +137,12 @@ int doSetEndActivity()
   if (0 > servo1Status)
   {
     printf("Fail setting Servo1\n");
+    ret--;
+  }
+  servo2Status = gpioServo(servoArmPin, 0);
+  if (0 > servo2Status)
+  {
+    printf("Fail setting Servo2\n");
     ret--;
   }
   return ret;
@@ -143,6 +176,8 @@ int main(int argc, char *argv[])
   sleep(1);
 
   int countRuns = 0;
+  int deltastep = 12;
+  int pauseBetweenStep = 15000;
   while (countRuns < 5)
   {
     usleep(500000);
@@ -153,26 +188,45 @@ int main(int argc, char *argv[])
       {
         printf("Fail setting LED\n");
       }
-      // do activity
-      int delta = deltastep;
-      int pos = baseServoHoodPos;
-      for (int i=0; i<100; i++)
+      // do activity:
+      // step 1: move hood from basepos to limit
+      for (int pos=baseServoHoodPos; pos<servoHoodlimithigh; pos += deltastep)
       {
-        pos += delta;
         int servo1Status = gpioServo(servoHoodPin, pos);
         if (0 > servo1Status)
         {
           printf("Fail setting Servo1\n");
         }
-        usleep(30000);
-        if (pos >= servoHoodlimithigh)
+        usleep(pauseBetweenStep);
+      }
+      // step 2: move arm from base to limit and back
+      for (int pos=baseServoArmPos; pos<servoArmlimithigh; pos += deltastep)
+      {
+        int servo1Status = gpioServo(servoArmPin, pos);
+        if (0 > servo1Status)
         {
-          delta = -1 * deltastep;
+          printf("Fail setting Servo1\n");
         }
-        if (pos <= servoHoodlimitlow)
+        usleep(pauseBetweenStep);
+      }
+      for (int pos=servoArmlimithigh; pos > baseServoArmPos; pos -= deltastep)
+      {
+        int servo1Status = gpioServo(servoArmPin, pos);
+        if (0 > servo1Status)
         {
-          delta = deltastep;
+          printf("Fail setting Servo1\n");
         }
+        usleep(pauseBetweenStep);
+      }
+      // step 3: move hood from limit to base
+      for (int pos=servoHoodlimithigh; pos > baseServoHoodPos; pos -= deltastep)
+      {
+        int servo1Status = gpioServo(servoHoodPin, pos);
+        if (0 > servo1Status)
+        {
+          printf("Fail setting Servo1\n");
+        }
+        usleep(pauseBetweenStep);
       }
       // end activity
       doSetEndActivity();
