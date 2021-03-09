@@ -6,7 +6,8 @@
 
 unsigned int led1Pin = 17;   // 4 is ok too
 unsigned int button1Pin = 22;
-unsigned int servo1Pin = 23;
+unsigned int servo1Pin = 25; // or 23
+uint32_t lastTick = 0;
 
 int doInitLib()
 {
@@ -50,7 +51,15 @@ void doExit()
 
 void button1AlertFunc(int gpio, int level, uint32_t tick)
 {
-	printf("Alert: gpio %d, level %d, tick %u\n", gpio, level, tick);
+	if (tick - lastTick > 200) // non-ideal switch sending multiple events
+	{
+		printf("\nAccepted: gpio %d, level %d, tick %u\n", gpio, level, tick);
+	}
+	else
+	{
+		// printf("Ignored: gpio %d, level %d, tick %u\n", gpio, level, tick);
+	}
+  lastTick = tick;
 }
 
 int main(int argc, char *argv[])

@@ -6,6 +6,7 @@
 
 unsigned int led1Pin = 17;   // 4 is ok too
 unsigned int button1Pin = 22;
+uint32_t lastTick = 0;
 
 void doExit()
 {
@@ -16,7 +17,15 @@ void doExit()
 
 void button1AlertFunc(int gpio, int level, uint32_t tick)
 {
-	printf("Alert: gpio %d, level %d, tick %u\n", gpio, level, tick);
+	if (tick - lastTick > 200) // non-ideal switch sending multiple events
+	{
+		printf("\nAccepted: gpio %d, level %d, tick %u\n", gpio, level, tick);
+	}
+	else
+	{
+		// printf("Ignored: gpio %d, level %d, tick %u\n", gpio, level, tick);
+	}
+  lastTick = tick;
 }
 
 int main(int argc, char *argv[])
@@ -64,7 +73,7 @@ int main(int argc, char *argv[])
   // eventing
   int button1AlertSet = gpioSetAlertFunc(button1Pin, &button1AlertFunc);
   printf("input1 set alert: %d (>=0 means ok)\n", button1AlertSet);
-  sleep(20);
+  sleep(30);
 
 	// -------------------------- cleanup
 	doExit();
