@@ -1,8 +1,9 @@
 from machine import Pin, Timer, PWM
 import time
 
-led2 = Pin(25, Pin.OUT) #internal LED
+# led2 = Pin(25, Pin.OUT) #internal LED
 led  = Pin(14, Pin.OUT) #GP14
+led2 = Pin(11, Pin.OUT)
 btn  = Pin(28, Pin.IN)  #GP28
 
 led2.value(1) # switch on on program start
@@ -27,7 +28,7 @@ dc = pwmmin;
 #
 
 count = 0
-while count < 100:
+while count < 200:
         if btn.value():
             led.value(1)
         else:
