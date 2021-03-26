@@ -40,11 +40,11 @@ while count < 200:
         if (dc > pwmmax):
             pwmdelta = -1 * pwmstep
             dc = pwmmax
-            print("umdreh max")
+            print("umdreh max", dc)
         if (dc < pwmmin):
             pwmdelta = pwmstep
             dc = pwmmin
-            print("umdreh min")
+            print("umdreh min", dc)
         count = count + 1;
 
 		#switch all off
