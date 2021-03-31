@@ -15,6 +15,10 @@ servoArm.freq(50)
 servoHood = PWM(Pin(4))
 servoHood.freq(50)
 
+pwmmin = 2300 # 3276
+pwmmax = 7900 # 6553
+pwmstep = 400
+
 class UMState:
     startedTime = 0
     
@@ -31,59 +35,81 @@ class UMState:
     def startRunning(self):
         if self.state != stateDict["base"]:
             return -1
+        print("Start cycle")
         self.state = stateDict["running"]
+        ledWork.value(1)
         self.startedTime = time.time()
         return 1
 
     def stopRunning(self):
         self.__reset()
+        ledWork.value(0)
 
     def doPrint(self):
         print("State: ", self.state, " tick: ", self.startedTime)
 
-	def startApp(self):
-		ledReady.value(1) # switch on on program start
-		letWork.value(0)
-	
-	def stopApp(self):
-		ledReady.value(0)
-		ledWork.value(0)
-		servoHood.deinit()
-		servoArm.deinit()
+    def startApp(self):
+        ledReady.value(1) # switch on at program start
+        ledWork.value(0)
+        servoHood.duty_u16(pwmmin)
+        servoArm.duty_u16(pwmmin)
+        time.sleep(1)
 
+    def stopApp(self):
+        ledReady.value(0)
+        ledWork.value(0)
+        servoHood.duty_u16(pwmmin)
+        servoArm.duty_u16(pwmmin)
+        time.sleep(1)
+        servoHood.deinit()
+        servoArm.deinit()
 
-pwmmin = 2200 # 3276
-pwmmax = 7900 # 6553
-pwmstep = 200
-pwmdelta = pwmstep
-dc = pwmmin;
+    def doCycle(self):
+        # step1: open hood
+        dc = pwmmin
+        pwmdelta = pwmstep
+        while dc < pwmmax:
+            servoHood.duty_u16(dc)
+            dc = dc + pwmdelta;
+            time.sleep(0.25)
+        # step 2: move arm forward and back
+        dc = pwmmin
+        pwmdelta = pwmstep
+        while dc >= pwmmin:
+            servoArm.duty_u16(dc)
+            if (dc > pwmmax):
+                pwmdelta = -1 * pwmstep
+                dc = pwmmax
+            dc = dc + pwmdelta;
+            time.sleep(0.25)
+        # step 3: close hood
+        dc = pwmmax
+        pwmdelta = -1 * pwmstep
+        while dc > pwmmin:
+            servoHood.duty_u16(dc)
+            dc = dc + pwmdelta;
+            time.sleep(0.25)
+        # and back to base state
+        self.stopRunning()
 
 um = UMState()
 um.startApp()
 
-count = 0
-while count < 200:
-        if btn.value():
-            ledWork.value(1)
-        else:
-            ledWork.value(0)
-        servoHood.duty_u16(dc)
-        # print("dc = " + str(dc))
-        dc = dc + pwmdelta;
-        if (dc > pwmmax):
-            pwmdelta = -1 * pwmstep
-            dc = pwmmax
-            print("umdreh max", dc)
-        if (dc < pwmmin):
-            pwmdelta = pwmstep
-            dc = pwmmin
-            print("umdreh min", dc)
-        count = count + 1;
-        time.sleep(0.25)
+try:
+    print("Ready - waiting")
+    while True:
+        if btn.value() == 1:
+            if um.getState() == stateDict["base"]:
+                um.startRunning()
+        if um.getState() == stateDict["running"]:
+            um.doCycle()
+except KeyboardInterrupt:
+    print ("Interrupted ctrl-c")
+    #switch all off
+    um.stopApp()
 
-#switch all off
-um.stopApp()
-
+#the end
 
 
     
+
