@@ -17,7 +17,8 @@ servoHood.freq(50)
 
 pwmmin = 2300 # 3276
 pwmmax = 7900 # 6553
-pwmstep = 400
+pwmstep = 300
+sleeptime = 0.1
 
 class UMState:
     startedTime = 0
@@ -71,24 +72,26 @@ class UMState:
         while dc < pwmmax:
             servoHood.duty_u16(dc)
             dc = dc + pwmdelta;
-            time.sleep(0.25)
+            time.sleep(sleeptime)
+        servoHood.duty_u16(pwmmax) # put on max position
+        
         # step 2: move arm forward and back
         dc = pwmmin
         pwmdelta = pwmstep
         while dc >= pwmmin:
-            servoArm.duty_u16(dc)
             if (dc > pwmmax):
                 pwmdelta = -1 * pwmstep
                 dc = pwmmax
+            servoArm.duty_u16(dc)
             dc = dc + pwmdelta;
-            time.sleep(0.25)
+            time.sleep(sleeptime)
         # step 3: close hood
         dc = pwmmax
         pwmdelta = -1 * pwmstep
         while dc > pwmmin:
             servoHood.duty_u16(dc)
             dc = dc + pwmdelta;
-            time.sleep(0.25)
+            time.sleep(sleeptime)
         # and back to base state
         self.stopRunning()
 
