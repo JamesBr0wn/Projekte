@@ -16,9 +16,9 @@ servoHood = PWM(Pin(4))
 servoHood.freq(50)
 
 pwmmin = 2300 # 3276
-pwmmax = 7900 # 6553
-pwmstep = 300
-sleeptime = 0.1
+pwmmax = 7700 # 6553
+pwmstep = 50
+sleeptime = 0.025
 
 class UMState:
     startedTime = 0
@@ -40,6 +40,7 @@ class UMState:
         self.state = stateDict["running"]
         ledWork.value(1)
         self.startedTime = time.time()
+        self.doCycle()
         return 1
 
     def stopRunning(self):
@@ -95,19 +96,19 @@ class UMState:
         # and back to base state
         self.stopRunning()
 
+# -------------------- main -------------------------
 um = UMState()
 um.startApp()
 
 try:
     print("Ready - waiting")
     while True:
-        if btn.value() == 1:
-            if um.getState() == stateDict["base"]:
-                um.startRunning()
-        if um.getState() == stateDict["running"]:
-            um.doCycle()
+        if (btn.value() == 1) and (um.getState() == stateDict["base"]):
+            um.startRunning()
+        time.sleep(0.5)  # no need for full power polling
+
 except KeyboardInterrupt:
-    print ("Interrupted ctrl-c")
+    print("Interrupted ctrl-c")
     #switch all off
     um.stopApp()
 
