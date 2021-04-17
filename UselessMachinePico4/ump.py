@@ -21,14 +21,16 @@ pwmstep = 50
 sleeptime = 0.025
 
 class UMState:
-    startedTime = 0
+    cycleStartedTime = 0
+    appStartedTime = 0
     
     def __reset(self):
         self.state = stateDict["base"]
-        self.startedTime = 0
+        self.cycleStartedTime = 0
         
     def __init__(self):
         self.__reset()
+        self.appStartedTime = time.time()
 
     def getState(self):
         return self.state
@@ -38,20 +40,18 @@ class UMState:
             return -1
         print("Start cycle")
         self.state = stateDict["running"]
-        ledWork.value(1)
-        self.startedTime = time.time()
+        self.cycleStartedTime = time.time()
         self.doCycle()
         return 1
 
     def stopRunning(self):
         self.__reset()
-        ledWork.value(0)
 
     def doPrint(self):
         print("State: ", self.state, " tick: ", self.startedTime)
 
-    def startApp(self):
-        ledReady.value(1) # switch on at program start
+    def basePosPios(self):
+        ledReady.value(1)
         ledWork.value(0)
         servoHood.duty_u16(pwmmin)
         servoArm.duty_u16(pwmmin)
@@ -59,7 +59,7 @@ class UMState:
         servoHood.deinit() #no need for constant pwm output
         servoArm.deinit()
 
-    def stopApp(self):
+    def stopPios(self):
         ledReady.value(0)
         ledWork.value(0)
         servoHood.duty_u16(pwmmin)
@@ -69,6 +69,8 @@ class UMState:
         servoArm.deinit()
 
     def doCycle(self):
+        # step 0: signal working
+        ledWork.value(1)
         # step1: open hood
         dc = pwmmin
         pwmdelta = pwmstep
@@ -85,8 +87,8 @@ class UMState:
             if dc < pwmmax: # keep moving forward
                 servoArm.duty_u16(dc)
                 dc = dc + pwmdelta
-            else:
-                print("Max")
+            # else:
+                # print("Max")
             time.sleep(sleeptime)
 
         # step 3: move arm back
@@ -104,14 +106,16 @@ class UMState:
             dc = dc + pwmdelta;
             time.sleep(sleeptime)
         # and back to base state
+        self.basePosPios()
         self.stopRunning()
 
+
 # -------------------- main -------------------------
-ledReady.value(1) #directly indicate readiness
+ledReady.value(1) # switch on at program start
 time.sleep(1) #delay all actions
 
 um = UMState()
-um.startApp()
+um.basePosPios()
 
 try:
     print("Ready - waiting")
@@ -123,7 +127,7 @@ try:
 except KeyboardInterrupt:
     print("Interrupted ctrl-c")
     #switch all off
-    um.stopApp()
+    um.stopPios()
 
 #the end
 
