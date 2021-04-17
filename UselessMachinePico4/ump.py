@@ -56,6 +56,8 @@ class UMState:
         servoHood.duty_u16(pwmmin)
         servoArm.duty_u16(pwmmin)
         time.sleep(1)
+        servoHood.deinit() #no need for constant pwm output
+        servoArm.deinit()
 
     def stopApp(self):
         ledReady.value(0)
@@ -72,21 +74,29 @@ class UMState:
         pwmdelta = pwmstep
         while dc < pwmmax:
             servoHood.duty_u16(dc)
-            dc = dc + pwmdelta;
+            dc = dc + pwmdelta
             time.sleep(sleeptime)
         servoHood.duty_u16(pwmmax) # put on max position
         
-        # step 2: move arm forward and back
+        # step 2: move arm forward until it is either at max, or button switched
         dc = pwmmin
         pwmdelta = pwmstep
+        while btn.value() == 1:
+            if dc < pwmmax: # keep moving forward
+                servoArm.duty_u16(dc)
+                dc = dc + pwmdelta
+            else:
+                print("Max")
+            time.sleep(sleeptime)
+
+        # step 3: move arm back
+        pwmdelta = -1 * pwmstep
         while dc >= pwmmin:
-            if (dc > pwmmax):
-                pwmdelta = -1 * pwmstep
-                dc = pwmmax
             servoArm.duty_u16(dc)
             dc = dc + pwmdelta;
             time.sleep(sleeptime)
-        # step 3: close hood
+        
+        # step 4: close hood
         dc = pwmmax
         pwmdelta = -1 * pwmstep
         while dc > pwmmin:
@@ -97,6 +107,9 @@ class UMState:
         self.stopRunning()
 
 # -------------------- main -------------------------
+ledReady.value(1) #directly indicate readiness
+time.sleep(1) #delay all actions
+
 um = UMState()
 um.startApp()
 

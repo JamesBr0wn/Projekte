@@ -27,6 +27,8 @@ print("Servo2 GP10 = ", servo2)
 dc = pwmmin
 pwmdelta = pwmstep
 
+time.sleep(1)
+
 count = 0
 while count < 2000:
     if btn.value():
